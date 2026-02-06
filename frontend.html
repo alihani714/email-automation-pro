@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Automation Pro</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+        }
+        .header h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+        .tab {
+            padding: 1rem 2rem;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.2s;
+        }
+        .tab.active {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            padding: 2rem;
+        }
+        .stat-card {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 2px solid #e9ecef;
+        }
+        .stat-card h3 { color: #6c757d; font-size: 0.875rem; margin-bottom: 0.5rem; }
+        .stat-card .value { font-size: 2rem; font-weight: bold; color: #667eea; }
+        .controls {
+            padding: 0 2rem 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        button:hover { transform: translateY(-2px); }
+        .btn-start { background: #10b981; color: white; }
+        .btn-stop { background: #ef4444; color: white; }
+        .btn-upload { background: #667eea; color: white; cursor: pointer; }
+        .btn-save { background: #3b82f6; color: white; }
+        input[type="file"] { display: none; }
+        .section {
+            padding: 2rem;
+            border-top: 2px solid #e9ecef;
+        }
+        .section h2 { margin-bottom: 1rem; color: #1f2937; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 1rem; text-align: left; border-bottom: 1px solid #e9ecef; }
+        th { background: #f8f9fa; font-weight: 600; }
+        .status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .status-sent { background: #dcfce7; color: #166534; }
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-failed { background: #fee2e2; color: #991b1b; }
+        .campaign-status { padding: 1rem; border-radius: 8px; margin-top: 1rem; font-weight: 500; }
+        .campaign-active { background: #dcfce7; color: #166534; }
+        .campaign-inactive { background: #fee2e2; color: #991b1b; }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+        .form-group textarea {
+            min-height: 200px;
+            resize: vertical;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        .info-box {
+            background: #e0e7ff;
+            border-left: 4px solid #667eea;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 4px;
+        }
+        .info-box p {
+            color: #1e40af;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📧 Email Automation Pro</h1>
+            <p>Smart email campaigns with SendGrid - Timezone Aware</p>
+            <div id="campaignStatus" class="campaign-status campaign-inactive">🔴 Campaign Stopped</div>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('dashboard')">Dashboard</button>
+            <button class="tab" onclick="switchTab('settings')">Settings</button>
+        </div>
+
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <div class="stats">
+                <div class="stat-card"><h3>TOTAL</h3><div class="value" id="total">0</div></div>
+                <div class="stat-card"><h3>SENT</h3><div class="value" id="sent">0</div></div>
+                <div class="stat-card"><h3>PENDING</h3><div class="value" id="pending">0</div></div>
+                <div class="stat-card"><h3>TODAY</h3><div class="value" id="daily">0/100</div></div>
+            </div>
+            <div class="controls">
+                <button class="btn-start" onclick="start()">▶️ Start</button>
+                <button class="btn-stop" onclick="stop()">⏸️ Stop</button>
+                <label class="btn-upload">
+                    📤 Upload CSV
+                    <input type="file" accept=".csv" onchange="upload(this)">
+                </label>
+            </div>
+            <div class="section">
+                <h2>Clients</h2>
+                <table>
+                    <thead><tr><th>Business</th><th>Email</th><th>City</th><th>Status</th><th>Count</th></tr></thead>
+                    <tbody id="clients"><tr><td colspan="5" style="text-align:center;padding:2rem;color:#6c757d;">No clients loaded</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div id="settings" class="tab-content">
+            <div class="section">
+                <h2>Campaign Settings</h2>
+                
+                <div class="info-box">
+                    <p><strong>📍 Timezone Feature:</strong> Emails are sent based on each client's city local time. The app will only send when it's between your specified hours in THEIR timezone.</p>
+                </div>
+
+                <form id="settingsForm" onsubmit="saveSettings(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Start Time (Client's Local Time)</label>
+                            <input type="time" id="startTime" required>
+                        </div>
+                        <div class="form-group">
+                            <label>End Time (Client's Local Time)</label>
+                            <input type="time" id="endTime" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Min Interval (minutes)</label>
+                            <input type="number" id="minInterval" min="1" max="60" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Max Interval (minutes)</label>
+                            <input type="number" id="maxInterval" min="1" max="60" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Emails Per Account (before switching)</label>
+                        <input type="number" id="emailsPerAccount" min="1" max="100" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Gmail Accounts (comma-separated)</label>
+                        <input type="text" id="gmailAccounts" placeholder="email1@gmail.com, email2@gmail.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Subject Line 1</label>
+                        <input type="text" id="subject1" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Subject Line 2</label>
+                        <input type="text" id="subject2" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Email Template (use {{Business Name}}, {{city}}, {{What Stood Out}})</label>
+                        <textarea id="emailTemplate" required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-save">💾 Save Settings</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSettings = {};
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+            
+            if (tabName === 'settings') {
+                loadSettings();
+            }
+        }
+
+        async function loadSettings() {
+            try {
+                const response = await fetch('/api/settings');
+                currentSettings = await response.json();
+                
+                document.getElementById('startTime').value = currentSettings.startTime;
+                document.getElementById('endTime').value = currentSettings.endTime;
+                document.getElementById('minInterval').value = currentSettings.minInterval;
+                document.getElementById('maxInterval').value = currentSettings.maxInterval;
+                document.getElementById('emailsPerAccount').value = currentSettings.emailsPerAccount;
+                document.getElementById('gmailAccounts').value = currentSettings.gmailAccounts.join(', ');
+                document.getElementById('subject1').value = currentSettings.subjectLines[0] || '';
+                document.getElementById('subject2').value = currentSettings.subjectLines[1] || '';
+                document.getElementById('emailTemplate').value = currentSettings.emailTemplate;
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
+        }
+
+        async function saveSettings(event) {
+            event.preventDefault();
+            
+            const settings = {
+                startTime: document.getElementById('startTime').value,
+                endTime: document.getElementById('endTime').value,
+                minInterval: parseInt(document.getElementById('minInterval').value),
+                maxInterval: parseInt(document.getElementById('maxInterval').value),
+                emailsPerAccount: parseInt(document.getElementById('emailsPerAccount').value),
+                gmailAccounts: document.getElementById('gmailAccounts').value.split(',').map(e => e.trim()),
+                subjectLines: [
+                    document.getElementById('subject1').value,
+                    document.getElementById('subject2').value
+                ],
+                emailTemplate: document.getElementById('emailTemplate').value
+            };
+
+            try {
+                const response = await fetch('/api/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(settings)
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('✅ Settings saved successfully!');
+                } else {
+                    alert('❌ Error: ' + data.error);
+                }
+            } catch (error) {
+                alert('❌ Error saving settings: ' + error.message);
+            }
+        }
+
+        async function refresh() {
+            const s = await (await fetch('/api/status')).json();
+            document.getElementById('total').textContent = s.total;
+            document.getElementById('sent').textContent = s.sent;
+            document.getElementById('pending').textContent = s.pending;
+            document.getElementById('daily').textContent = s.dailyCount + '/100';
+            const st = document.getElementById('campaignStatus');
+            st.className = 'campaign-status ' + (s.active ? 'campaign-active' : 'campaign-inactive');
+            st.textContent = s.active ? '🟢 Active' : '🔴 Stopped';
+            
+            const c = await (await fetch('/api/clients')).json();
+            const tb = document.getElementById('clients');
+            if (!c.length) {
+                tb.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:#6c757d;">No clients</td></tr>';
+            } else {
+                tb.innerHTML = c.map(x => '<tr><td>' + x.businessName + '</td><td>' + x.email + '</td><td>' + x.city + '</td><td><span class="status status-' + x.status + '">' + x.status + '</span></td><td>' + (x.sentCount||0) + '</td></tr>').join('');
+            }
+        }
+
+        async function start() {
+            const r = await fetch('/api/campaign/start', {method:'POST'});
+            const d = await r.json();
+            alert(d.success ? '✅ Started!' : '❌ ' + d.error);
+            refresh();
+        }
+
+        async function stop() {
+            await fetch('/api/campaign/stop', {method:'POST'});
+            alert('⏸️ Stopped!');
+            refresh();
+        }
+
+        async function upload(inp) {
+            const f = inp.files[0];
+            if (!f) return;
+            const fd = new FormData();
+            fd.append('csvFile', f);
+            const r = await fetch('/api/upload-csv', {method:'POST', body:fd});
+            const d = await r.json();
+            alert(d.success ? '✅ Uploaded ' + d.count + ' clients!' : '❌ ' + d.error);
+            refresh();
+        }
+
+        setInterval(refresh, 5000);
+        refresh();
+    </script>
+</body>
+</html>
